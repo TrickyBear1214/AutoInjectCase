@@ -24,14 +24,6 @@ namespace AutoInjectCase
                         return true;
                     }
 
-                    Log(
-                        "SendToPlayerCharacterInventory item=" +
-                        DescribeItem(item) +
-                        ", dontMerge=" +
-                        dontMerge +
-                        ", sourceInventory=" +
-                        sourceInventory.GetInstanceID());
-
                     if (ItemUtilities.IsInPlayerCharacter(item))
                     {
                         return true;
@@ -39,13 +31,11 @@ namespace AutoInjectCase
 
                     if (ItemUtilities.IsInPlayerStorage(item))
                     {
-                        Log("skip auto-case insert for player-storage item " + DescribeItem(item));
                         return true;
                     }
 
                     if (IsInPetInventory(item))
                     {
-                        Log("skip auto-case insert for pet-inventory item " + DescribeItem(item));
                         return true;
                     }
 
@@ -61,7 +51,6 @@ namespace AutoInjectCase
                         return false;
                     }
 
-                    LogWarning("inventory-send container store failed, fallback to default send for " + DescribeItem(item));
                     return true;
                 }
                 catch (Exception ex)

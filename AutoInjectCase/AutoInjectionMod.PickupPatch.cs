@@ -18,28 +18,19 @@ namespace AutoInjectCase
                         return true;
                     }
 
+                    if (CharacterControlRef(__instance) == null)
+                    {
+                        return true;
+                    }
+
                     StorageTarget target = FindBestTarget(item);
                     if (target == null)
                     {
                         return true;
                     }
 
-                    CharacterMainControl character = CharacterControlRef(__instance);
-                    if (character == null)
-                    {
-                        LogWarning("failed to resolve CharacterMainControl, fallback to default pickup");
-                        return true;
-                    }
-
-                    if (!PrepareItemForPickup(item))
-                    {
-                        LogWarning("failed to prepare item for pickup, fallback to default inventory pickup for " + DescribeItem(item));
-                        return true;
-                    }
-
                     if (!TryStorePickedItem(item, target))
                     {
-                        LogWarning("container store failed, fallback to default inventory pickup for " + DescribeItem(item));
                         return true;
                     }
 

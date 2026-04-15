@@ -8,25 +8,6 @@ namespace AutoInjectCase
 {
     public partial class ModBehaviour
     {
-        private static bool PrepareItemForPickup(Item item)
-        {
-            try
-            {
-                if (item.AgentUtilities != null)
-                {
-                    item.AgentUtilities.ReleaseActiveAgent();
-                }
-
-                item.Detach();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                LogError("PrepareItemForPickup error for " + DescribeItem(item) + ": " + ex);
-                return false;
-            }
-        }
-
         private static StorageTarget FindBestTarget(Item item)
         {
             List<Item> candidates = CollectAllPlayerItems();
@@ -39,11 +20,6 @@ namespace AutoInjectCase
 
             foreach (Item candidate in candidates)
             {
-                if (!IsValidContainer(candidate, item))
-                {
-                    continue;
-                }
-
                 StorageTarget candidateTarget = BuildStorageTarget(candidate, item);
                 if (candidateTarget == null)
                 {
@@ -203,23 +179,25 @@ namespace AutoInjectCase
                 return null;
             }
 
-            if (container.Slots != null)
+            if (container.Slots == null)
             {
-                foreach (Slot slot in container.Slots)
+                return null;
+            }
+
+            foreach (Slot slot in container.Slots)
+            {
+                if (slot == null || slot.Content != null || !slot.CanPlug(movingItem))
                 {
-                    if (slot == null || slot.Content != null || !slot.CanPlug(movingItem))
-                    {
-                        continue;
-                    }
-
-                    StorageTarget slotTarget = new StorageTarget
-                    {
-                        Container = container,
-                        Score = 100000 + GetContainerPriority(container)
-                    };
-
-                    return slotTarget;
+                    continue;
                 }
+
+                StorageTarget slotTarget = new StorageTarget
+                {
+                    Container = container,
+                    Score = 100000 + GetContainerPriority(container)
+                };
+
+                return slotTarget;
             }
 
             return null;
