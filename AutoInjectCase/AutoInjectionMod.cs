@@ -16,6 +16,10 @@ namespace AutoInjectCase
             AccessTools.FieldRefAccess<CharacterItemControl, CharacterMainControl>("characterMainControl");
         private static readonly System.Reflection.MethodInfo GetPlayerInventoriesMethod =
             AccessTools.Method(typeof(ItemUtilities), "GetPlayerInventories");
+        private static readonly System.Reflection.FieldInfo SlotRequireTagsField =
+            AccessTools.Field(typeof(Slot), "requireTags");
+        private static readonly System.Reflection.FieldInfo SlotExcludeTagsField =
+            AccessTools.Field(typeof(Slot), "excludeTags");
 
         private static Harmony harmony;
 
@@ -23,6 +27,7 @@ namespace AutoInjectCase
         {
             public Item Container;
             public Inventory Inventory;
+            public Slot Slot;
             public int Score;
         }
     }

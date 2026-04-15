@@ -194,17 +194,47 @@ namespace AutoInjectCase
                 return null;
             }
 
+            StorageTarget best = null;
+
+            if (container.Slots != null)
+            {
+                foreach (Slot slot in container.Slots)
+                {
+                    if (slot == null || slot.Content != null || !slot.CanPlug(movingItem))
+                    {
+                        continue;
+                    }
+
+                    StorageTarget slotTarget = new StorageTarget
+                    {
+                        Container = container,
+                        Slot = slot,
+                        Score = 100000 + GetContainerPriority(container) + GetSlotPriority(slot, movingItem)
+                    };
+
+                    if (best == null || slotTarget.Score > best.Score)
+                    {
+                        best = slotTarget;
+                    }
+                }
+            }
+
             if (container.Inventory != null && container.Inventory.Content.Count < container.Inventory.Capacity)
             {
-                return new StorageTarget
+                StorageTarget inventoryTarget = new StorageTarget
                 {
                     Container = container,
                     Inventory = container.Inventory,
                     Score = GetAvailableSlots(container.Inventory) + GetContainerPriority(container)
                 };
+
+                if (best == null || inventoryTarget.Score > best.Score)
+                {
+                    best = inventoryTarget;
+                }
             }
 
-            return null;
+            return best;
         }
 
         private static bool TryStorePickedItem(Item item, StorageTarget target)
@@ -216,6 +246,11 @@ namespace AutoInjectCase
 
             try
             {
+                if (target.Slot != null)
+                {
+                    return ItemUtilities.TryPlug(target.Container, item, true);
+                }
+
                 if (target.Inventory != null)
                 {
                     return ItemUtilities.AddAndMerge(target.Inventory, item);
@@ -262,7 +297,11 @@ namespace AutoInjectCase
             bool moved = false;
             try
             {
-                if (target.Inventory != null)
+                if (target.Slot != null)
+                {
+                    moved = ItemUtilities.TryPlug(target.Container, item, true, sourceInventory, sourceIndex);
+                }
+                else if (target.Inventory != null)
                 {
                     moved = dontMerge ? target.Inventory.AddItem(item) : ItemUtilities.AddAndMerge(target.Inventory, item);
                 }
@@ -319,6 +358,61 @@ namespace AutoInjectCase
             return score;
         }
 
+        private static int GetSlotPriority(Slot slot, Item item)
+        {
+            if (slot == null)
+            {
+                return 0;
+            }
+
+            int score = 0;
+
+            IEnumerable requireTags = SlotRequireTagsField?.GetValue(slot) as IEnumerable;
+            int requireCount = CountEnumerable(requireTags);
+            if (requireCount > 0)
+            {
+                score += 10000;
+                score += requireCount * 100;
+            }
+
+            IEnumerable excludeTags = SlotExcludeTagsField?.GetValue(slot) as IEnumerable;
+            int excludeCount = CountEnumerable(excludeTags);
+            if (excludeCount > 0)
+            {
+                score += excludeCount * 10;
+            }
+
+            if (item?.Tags != null && requireTags != null)
+            {
+                foreach (object tag in requireTags)
+                {
+                    string tagName = tag?.ToString();
+                    if (!string.IsNullOrWhiteSpace(tagName) && item.Tags.Contains(tagName))
+                    {
+                        score += 1000;
+                    }
+                }
+            }
+
+            return score;
+        }
+
+        private static int CountEnumerable(IEnumerable values)
+        {
+            if (values == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            foreach (object _ in values)
+            {
+                count++;
+            }
+
+            return count;
+        }
+
         private static bool IsValidContainer(Item candidate, Item movingItem)
         {
             if (candidate == null || movingItem == null || candidate == movingItem)
@@ -331,7 +425,7 @@ namespace AutoInjectCase
                 return false;
             }
 
-            if (candidate.Inventory == null)
+            if (candidate.Inventory == null && candidate.Slots == null)
             {
                 return false;
             }
@@ -341,7 +435,7 @@ namespace AutoInjectCase
                 return false;
             }
 
-            if (candidate.Inventory != null && candidate.Inventory.Content.Count >= candidate.Inventory.Capacity)
+            if (candidate.Inventory != null && candidate.Inventory.Content.Count >= candidate.Inventory.Capacity && !HasAvailableSlot(candidate, movingItem))
             {
                 return false;
             }
@@ -364,6 +458,24 @@ namespace AutoInjectCase
                    item.Tags.Contains(ContainerTagName);
         }
 
+        private static bool HasAvailableSlot(Item container, Item movingItem)
+        {
+            if (container == null || container.Slots == null)
+            {
+                return false;
+            }
+
+            foreach (Slot slot in container.Slots)
+            {
+                if (slot != null && slot.Content == null && slot.CanPlug(movingItem))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static string DescribeItem(Item item)
         {
             if (item == null)
@@ -382,6 +494,11 @@ namespace AutoInjectCase
             }
 
             string baseText = "'" + target.Container.DisplayName + "'(TypeID=" + target.Container.TypeID + ")";
+            if (target.Slot != null)
+            {
+                return baseText + " via slot '" + target.Slot.Key + "'";
+            }
+
             if (target.Inventory != null)
             {
                 return baseText + " via inventory";
