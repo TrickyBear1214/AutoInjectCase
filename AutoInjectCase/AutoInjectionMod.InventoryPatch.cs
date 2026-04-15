@@ -43,7 +43,7 @@ namespace AutoInjectCase
                         return true;
                     }
 
-                    if (TryMoveExistingItem(item, target, dontMerge))
+                    if (TryMoveExistingItem(item, target))
                     {
                         __result = true;
                         return false;
