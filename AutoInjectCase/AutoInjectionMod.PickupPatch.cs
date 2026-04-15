@@ -34,6 +34,7 @@ namespace AutoInjectCase
                         return true;
                     }
 
+                    ReleasePickupAgent(item);
                     __result = true;
                     return false;
                 }

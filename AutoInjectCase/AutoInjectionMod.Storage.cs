@@ -223,6 +223,18 @@ namespace AutoInjectCase
             return false;
         }
 
+        private static void ReleasePickupAgent(Item item)
+        {
+            try
+            {
+                item?.AgentUtilities?.ReleaseActiveAgent();
+            }
+            catch (Exception ex)
+            {
+                LogError("ReleasePickupAgent error for " + DescribeItem(item) + ": " + ex);
+            }
+        }
+
         private static bool TryMoveExistingItem(Item item, StorageTarget target)
         {
             if (item == null || target == null)
