@@ -10,7 +10,9 @@ namespace AutoInjectCase
     {
         private const string HarmonyId = "AutoInjectCase";
         private const string ContainerTagName = "Continer";
+        private const string DontDropOnDeadInSlotTagName = "DontDropOnDeadInSlot";
         private const int PetInventoryBonus = 100000;
+        private const int MatchingTagBonus = 10000;
 
         private static readonly AccessTools.FieldRef<CharacterItemControl, CharacterMainControl> CharacterControlRef =
             AccessTools.FieldRefAccess<CharacterItemControl, CharacterMainControl>("characterMainControl");

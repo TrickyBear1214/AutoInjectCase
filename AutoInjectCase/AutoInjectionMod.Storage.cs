@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Duckov.Utilities;
 using ItemStatsSystem;
 using ItemStatsSystem.Items;
 
@@ -194,7 +195,7 @@ namespace AutoInjectCase
                 StorageTarget slotTarget = new StorageTarget
                 {
                     Container = container,
-                    Score = 100000 + GetContainerPriority(container)
+                    Score = 100000 + GetContainerPriority(container, movingItem)
                 };
 
                 return slotTarget;
@@ -270,7 +271,7 @@ namespace AutoInjectCase
             return false;
         }
 
-        private static int GetContainerPriority(Item container)
+        private static int GetContainerPriority(Item container, Item movingItem)
         {
             int score = 0;
 
@@ -286,12 +287,45 @@ namespace AutoInjectCase
                 score += 1000;
             }
 
-            if (container.Tags != null && container.Tags.Contains(ContainerTagName))
-            {
-                score += 500;
-            }
+            score += CountMatchingPriorityTags(container, movingItem) * MatchingTagBonus;
 
             return score;
+        }
+
+        private static int CountMatchingPriorityTags(Item container, Item movingItem)
+        {
+            if (container?.Tags == null || movingItem?.Tags == null)
+            {
+                return 0;
+            }
+
+            int matchCount = 0;
+
+            foreach (Tag containerTag in container.Tags)
+            {
+                if (!IsPriorityTag(containerTag))
+                {
+                    continue;
+                }
+
+                if (movingItem.Tags.Contains(containerTag))
+                {
+                    matchCount++;
+                }
+            }
+
+            return matchCount;
+        }
+
+        private static bool IsPriorityTag(Tag tag)
+        {
+            if (tag == null)
+            {
+                return false;
+            }
+
+            return tag.name != ContainerTagName &&
+                   tag.name != DontDropOnDeadInSlotTagName;
         }
 
         private static bool IsValidContainer(Item candidate, Item movingItem)
