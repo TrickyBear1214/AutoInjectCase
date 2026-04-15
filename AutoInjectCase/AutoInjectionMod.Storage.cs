@@ -117,6 +117,41 @@ namespace AutoInjectCase
             return items;
         }
 
+        private static bool IsInPetInventory(Item item)
+        {
+            if (item == null)
+            {
+                return false;
+            }
+
+            Inventory petInventory = null;
+
+            try
+            {
+                petInventory = PetProxy.PetInventory;
+            }
+            catch (Exception ex)
+            {
+                LogError("failed to resolve PetInventory: " + ex.Message);
+                return false;
+            }
+
+            if (petInventory == null)
+            {
+                return false;
+            }
+
+            for (Item parent = item; parent != null; parent = parent.ParentItem)
+            {
+                if (parent.InInventory == petInventory)
+                {
+                    return true;
+                }
+            }
+
+            return item.InInventory == petInventory;
+        }
+
         private static void CollectItemsFromInventory(
             Inventory inventory,
             List<Item> items,

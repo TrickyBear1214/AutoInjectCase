@@ -37,6 +37,18 @@ namespace AutoInjectCase
                         return true;
                     }
 
+                    if (ItemUtilities.IsInPlayerStorage(item))
+                    {
+                        Log("skip auto-case insert for player-storage item " + DescribeItem(item));
+                        return true;
+                    }
+
+                    if (IsInPetInventory(item))
+                    {
+                        Log("skip auto-case insert for pet-inventory item " + DescribeItem(item));
+                        return true;
+                    }
+
                     StorageTarget target = FindBestTarget(item);
                     if (target == null)
                     {

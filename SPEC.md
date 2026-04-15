@@ -2,51 +2,53 @@
 
 ## Purpose
 
-플레이어가 아이템을 획득하거나 플레이어 인벤토리로 보내질 때, 조건에 맞는 케이스가 있으면 일반 인벤토리 대신 케이스로 자동 수납한다.
+When the player picks up an item or an item is sent toward the player inventory, store it directly into a matching case when possible instead of the normal player inventory.
 
 ## Current Assumptions
 
-- 실제 케이스들은 대부분 `Inventory` 기반이 아니라 `Slot` 기반이다.
-- 슬롯형 케이스에 대한 원본 게임의 스택 합치기 처리는 `Slot.Plug(...)` 직접 호출이 아니라 `ItemUtilities.TryPlug(...)` 경로에서 일어난다.
-- 따라서 슬롯형 케이스 자동 수납은 가능하면 `TryPlug(...)`를 사용해야 한다.
+- Actual cases used by this mod are slot-based, not inventory-based.
+- Slot-based stack merging in the base game happens through `ItemUtilities.TryPlug(...)`, not direct `Slot.Plug(...)`.
+- Therefore slot-based auto-insert must use `TryPlug(...)`.
 
 ## Functional Requirements
 
-1. 아이템 픽업 시
-   - 조건에 맞는 케이스가 있으면 그 케이스로 바로 들어가야 한다.
-   - 일반 플레이어 인벤토리를 거친 뒤 케이스로 재이동하는 방식은 지양한다.
-   - 케이스에 넣지 못하면 원본 게임의 픽업 로직으로 fallback 되어야 한다.
+1. Pickup flow
+   - If a matching case exists, the item should go directly into that case.
+   - Do not first place the item into the normal player inventory and then move it into a case.
+   - If case insert fails, fall back to the original game pickup logic.
 
-2. `SendToPlayerCharacterInventory(item, dontMerge)` 경로 시
-   - 조건에 맞는 케이스가 있으면 케이스로 자동 수납을 시도한다.
-   - 수납 실패 시 원본 게임 로직으로 fallback 되어야 한다.
+2. `SendToPlayerCharacterInventory(item, dontMerge)` flow
+   - Auto case insert is allowed only for cases where the item is being sent from outside player storage and outside pet inventory.
+   - If the source item is already in player storage, skip auto case insert and let the original game logic run.
+   - If the source item is already in pet inventory, skip auto case insert and let the original game logic run.
+   - If auto case insert is attempted and fails, fall back to the original game logic.
 
-3. 케이스 판정
-   - 케이스 판정은 기존 구현의 `ContainerTagName = "Continer"` 기준을 유지한다.
-   - 현재 기준으로 자동 수납 대상은 슬롯형 케이스를 우선한다.
+3. Case detection
+   - Keep using the current implementation rule based on `ContainerTagName = "Continer"`.
+   - Current targeting is slot-based case targeting.
 
-4. 적재 우선순위
-   - 동일 아이템을 넣을 수 있는 케이스가 여러 개라면 펫 인벤토리에 있는 케이스를 우선한다.
-   - 예:
-     - 플레이어 소지 케이스 `A`에도 넣을 수 있고
-     - 펫 인벤토리에 있는 케이스 `B`에도 넣을 수 있으면
-     - 케이스 `B`를 먼저 선택해야 한다.
+4. Load priority
+   - If multiple cases can accept the same item, prefer a case inside pet inventory.
+   - Example:
+   - Player-held case `A` can accept the item.
+   - Pet-inventory case `B` can also accept the item.
+   - Case `B` should be selected first.
 
-5. 슬롯형 케이스 동작
-   - 슬롯형 케이스 수납은 `ItemUtilities.TryPlug(...)` 기반으로 처리한다.
-   - 같은 타입 스택 아이템은 원본 게임과 동일하게 가능한 경우 기존 슬롯 내용물과 합쳐져야 한다.
+5. Slot-based case behavior
+   - Slot-based case insert uses `ItemUtilities.TryPlug(...)`.
+   - Stackable items should merge with existing matching slot contents the same way the base game does.
 
-6. 원본 동작 보존
-   - 자동 수납에 실패하면 아이템이 사라지거나 중복되지 않아야 한다.
-   - 원본 게임이 처리하던 필수 동작을 불필요하게 우회하지 않는다.
-   - `dontMerge` 의미는 원본 게임 정의를 따른다.
+6. Preserve base behavior
+   - Failed auto insert must not lose or duplicate items.
+   - Do not replace original game behavior blindly when the original required work is not understood.
+   - Preserve the base-game meaning of `dontMerge`.
 
 ## Non-Goals
 
-- 케이스 구조를 임의로 `Inventory`형이라고 가정해서 단순화하지 않는다.
-- 원본 동작을 충분히 확인하지 않은 상태에서 `PickupItem` 전체를 다른 로직으로 대체하지 않는다.
+- Do not assume cases are inventory-based and simplify the logic on that assumption.
+- Do not replace the full `PickupItem` behavior with a custom flow unless the original behavior has been verified.
 
 ## Working Rules
 
-- 이후 코드 수정은 이 파일 기준으로 진행한다.
-- 명세와 다른 방향의 수정이 필요하면 먼저 이 파일을 갱신한다.
+- Future code changes should follow this file.
+- If the intended behavior changes, update this file first.
