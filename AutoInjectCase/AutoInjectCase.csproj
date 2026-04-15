@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>disable</Nullable>
-    <DuckovPath>C:\Program Files (x86)\Steam\steamapps\common\Escape from Duckov</DuckovPath>
+    <DuckovPath Condition="'$(DuckovPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Escape from Duckov</DuckovPath>
     <LangVersion>latest</LangVersion>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>build\$(Configuration)\</OutputPath>

@@ -42,7 +42,11 @@ dotnet build .\AutoInjectCase.sln
 <DuckovPath>C:\Program Files (x86)\Steam\steamapps\common\Escape from Duckov</DuckovPath>
 ```
 
-환경이 다르면 이 경로를 먼저 맞춰야 합니다.
+기본값은 위 경로지만, 빌드 시 속성으로 덮어쓸 수 있습니다.
+
+```powershell
+dotnet build .\AutoInjectCase.sln -p:DuckovPath="D:\Games\Escape from Duckov"
+```
 
 ## 로그
 
