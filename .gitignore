@@ -1,0 +1,7 @@
+.idea/
+AutoInjectCase/build/
+AutoInjectCase/obj/
+*.DotSettings.user
+*.suo
+*.user
+.vs/
