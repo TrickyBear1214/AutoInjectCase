@@ -39,8 +39,6 @@ namespace AutoInjectCase
 
             foreach (Item candidate in candidates)
             {
-                LogCandidateShape(candidate);
-
                 if (!IsValidContainer(candidate, item))
                 {
                     continue;
@@ -59,21 +57,6 @@ namespace AutoInjectCase
             }
 
             return best;
-        }
-
-        private static void LogCandidateShape(Item candidate)
-        {
-            if (candidate == null || !IsContainerLike(candidate))
-            {
-                return;
-            }
-
-            int slotCount = candidate.Slots != null ? candidate.Slots.Count : 0;
-            Log(
-                "container candidate " +
-                DescribeItem(candidate) +
-                ", slotCount=" +
-                slotCount);
         }
 
         private static List<Item> CollectAllPlayerItems()
