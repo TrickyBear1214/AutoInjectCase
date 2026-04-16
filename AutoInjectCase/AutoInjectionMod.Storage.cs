@@ -180,28 +180,11 @@ namespace AutoInjectCase
                 return null;
             }
 
-            if (container.Slots == null)
+            return new StorageTarget
             {
-                return null;
-            }
-
-            foreach (Slot slot in container.Slots)
-            {
-                if (slot == null || slot.Content != null || !slot.CanPlug(movingItem))
-                {
-                    continue;
-                }
-
-                StorageTarget slotTarget = new StorageTarget
-                {
-                    Container = container,
-                    Score = 100000 + GetContainerPriority(container, movingItem)
-                };
-
-                return slotTarget;
-            }
-
-            return null;
+                Container = container,
+                Score = 100000 + GetContainerPriority(container, movingItem)
+            };
         }
 
         private static bool TryStorePickedItem(Item item, StorageTarget target)
@@ -394,13 +377,36 @@ namespace AutoInjectCase
 
             foreach (Slot slot in container.Slots)
             {
-                if (slot != null && slot.Content == null && slot.CanPlug(movingItem))
+                if (slot == null || !slot.CanPlug(movingItem))
+                {
+                    continue;
+                }
+
+                if (slot.Content == null)
+                {
+                    return true;
+                }
+
+                if (CanMergeIntoSlot(slot, movingItem))
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        private static bool CanMergeIntoSlot(Slot slot, Item movingItem)
+        {
+            if (slot?.Content == null || movingItem == null || !movingItem.Stackable)
+            {
+                return false;
+            }
+
+            Item content = slot.Content;
+            return content.Stackable &&
+                   content.TypeID == movingItem.TypeID &&
+                   content.StackCount < content.MaxStackCount;
         }
 
         private static string DescribeItem(Item item)
